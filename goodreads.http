@@ -21,3 +21,27 @@ Content-Type: application/json
   "price": 850,
   "onlineStores": "Amazon,Audible,Indigo,Apple Books,Google Play,IndieBound"
 }
+
+//Update Book API
+PUT http://localhost:3000/books/41/
+Content-Type: application/json
+
+{
+  "title": "Harry Potter and the Order of the Phoenix",
+  "authorId": 1,
+  "rating": 5,
+  "ratingCount": 1000000,
+  "reviewCount": 711,
+  "description": "There is a door at the end of a silent corridor.",
+  "pages": 352,
+  "dateOfPublication": "May 1st 2003",
+  "editionLanguage": "English",
+  "price": 850,
+  "onlineStores": "Amazon,Audible,Indigo,Apple Books,Google Play,IndieBound"
+}
+
+//Delete Book API
+DELETE http://localhost:3000/books/41/
+
+//Get Author Books API
+GET http://localhost:3000/authors/1/books/
