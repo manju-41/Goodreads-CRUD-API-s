@@ -1,7 +1,9 @@
 const express = require('express');
 const {open} = require('sqlite');
 const sqlite3 = require('sqlite3')
-const path = require('path')
+const path = require('path');
+const { request } = require('http');
+const { response } = require('express');
 
 const app = express()
 
@@ -28,3 +30,12 @@ const initializeDBAndServer = async () => {
 
 
 initializeDBAndServer();
+
+app.get("/books/",async (request,response)=>{
+    const getBooksQuery = `
+    SELECT *
+    FROM book
+    ORDER BY book_id;`;
+    let booksArray = await db.all(getBooksQuery);
+    response.send(booksArray);
+});
