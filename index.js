@@ -2,8 +2,7 @@ const express = require('express');
 const {open} = require('sqlite');
 const sqlite3 = require('sqlite3')
 const path = require('path');
-const { request } = require('http');
-const { response } = require('express');
+
 
 const app = express()
 
