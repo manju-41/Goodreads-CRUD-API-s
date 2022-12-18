@@ -3,7 +3,9 @@ const {open} = require('sqlite');
 const sqlite3 = require('sqlite3');
 const path = require('path');
 const bcrypt = require('bcrypt');
-const jwt = require("jsonwebtoken")
+const jwt = require("jsonwebtoken");
+const { request } = require('http');
+const { response } = require('express');
 
 
 const app = express();
@@ -32,6 +34,29 @@ const initializeDBAndServer = async () => {
 
 
 initializeDBAndServer();
+
+const authenticateToken = (request,response,next) => {
+    const authHeader = request.headers["authorization"];
+    let jwtToken;
+    if (authHeader !== undefined){
+        jwtToken = authHeader.split(" ")[1];
+    }
+    if (jwtToken === undefined){
+        response.status(401);
+        response.send("Invalid JWT Token");
+    }
+    else{
+        jwt.verify(jwtToken,"gnjrgbghbhr",async (error,payload)=>{
+            if(error){
+                response.status(401);
+                response.send("Invalid JWT Token")
+            }
+            else{
+                next();
+            }
+        })
+    }
+}
 
 //Get Books API
 app.get("/books/", async (request,response)=>{
@@ -224,31 +249,26 @@ app.post("/login/",async (request,response)=>{
     }
 });
 
-//Get Books API with authenticcation and authorization
-app.get("/abooks/", async (request,response)=>{
-    const authHeader = request.headers["authorization"];
-    let jwtToken;
-    if (authHeader !== undefined){
-        jwtToken = authHeader.split(" ")[1];
-    }
-    if (jwtToken === undefined){
-        response.status(401);
-        response.send("Invalid JWT Token");
-    }
-    else{
-        jwt.verify(jwtToken,"gnjrgbghbhr",async (error,payload)=>{
-            if(error){
-                response.status(401);
-                response.send("Invalid JWT Token")
-            }
-            else{
-                const getBooksQuery = `
-                SELECT *
-                FROM book
-                ORDER BY book_id;`;
-                let booksArray = await db.all(getBooksQuery);
-                response.send(booksArray);
-            }
-        })
-    }
+//Get Books API with authentication and authorization
+app.get("/abooks/", authenticateToken,async (request,response)=>{
+    const getBooksQuery = `
+    SELECT *
+    FROM book
+    ORDER BY book_id;`;
+    let booksArray = await db.all(getBooksQuery);
+    response.send(booksArray);
+
+});
+
+//Get Book API with authenticcation and authorization
+app.get("/abooks/:bookId/", authenticateToken,async (request,response)=>{
+    const {bookId} = request.params
+    const getBookQuery = `
+    SELECT 
+    *
+    FROM
+    book
+    WHERE book_id=${bookId};`;
+    const book = await db.get(getBookQuery);
+    response.send(book);
 });
