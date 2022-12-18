@@ -136,7 +136,7 @@ app.put("/books/:bookId", async (request,response)=>{
 });
 
 //Delete Book API
-app.delete("/books/:bookId", async(request,response)=>{
+app.delete("/books/:bookId", async (request,response)=>{
     const {bookId} = request.params;
     const deleteBookQuery = `
     DELETE FROM book
@@ -157,4 +157,18 @@ app.get("/authors/:authorId/books" , async (request,response)=>{
         author_id = ${authorId};`;
     const booksArray = await db.all(getAuthorBooksQuery);
     response.send(booksArray);
+});
+
+//Filtering Books API
+app.get("/filterbooks/", async (request,response)=>{
+    const {offset=0,limit=10,search_q="",order="ASC",order_by="book_id"} = request.query
+    const getfilteredBooksQuery = `
+    SELECT *
+    FROM book
+    WHERE title LIKE '%${search_q}%'
+    ORDER BY ${order_by} ${order}
+    LIMIT ${limit}
+    OFFSET ${offset}`;
+    let filteredbooksArray = await db.all(getfilteredBooksQuery);
+    response.send(filteredbooksArray);
 });
