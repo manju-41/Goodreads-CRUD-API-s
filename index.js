@@ -3,6 +3,7 @@ const {open} = require('sqlite');
 const sqlite3 = require('sqlite3');
 const path = require('path');
 const bcrypt = require('bcrypt');
+const jwt = require("jsonwebtoken")
 
 
 const app = express();
@@ -198,7 +199,7 @@ app.post("/users/",async (request,response)=>{
         response.send("User already exists...")
 
     }
-})
+});
 
 //Login User API
 app.post("/login/",async (request,response)=>{
@@ -212,11 +213,42 @@ app.post("/login/",async (request,response)=>{
     else{
         const isPasswordMatched = await bcrypt.compare(password,dbUser.password);
         if(isPasswordMatched===true){
-            response.send("Login Success!");
+            const payload = {username: username};
+            const jwtToken = jwt.sign(payload,"gnjrgbghbhr")
+            response.send(jwtToken);
         }
         else{
             response.status(400);
             response.send("Invalid Password...")
         }
     }
-})
+});
+
+//Get Books API with authenticcation and authorization
+app.get("/abooks/", async (request,response)=>{
+    const authHeader = request.headers["authorization"];
+    let jwtToken;
+    if (authHeader !== undefined){
+        jwtToken = authHeader.split(" ")[1];
+    }
+    if (jwtToken === undefined){
+        response.status(401);
+        response.send("Invalid JWT Token");
+    }
+    else{
+        jwt.verify(jwtToken,"gnjrgbghbhr",async (error,payload)=>{
+            if(error){
+                response.status(401);
+                response.send("Invalid JWT Token")
+            }
+            else{
+                const getBooksQuery = `
+                SELECT *
+                FROM book
+                ORDER BY book_id;`;
+                let booksArray = await db.all(getBooksQuery);
+                response.send(booksArray);
+            }
+        })
+    }
+});
