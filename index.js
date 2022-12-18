@@ -52,6 +52,7 @@ const authenticateToken = (request,response,next) => {
                 response.send("Invalid JWT Token")
             }
             else{
+                request.username = payload.username;
                 next();
             }
         })
@@ -271,4 +272,12 @@ app.get("/abooks/:bookId/", authenticateToken,async (request,response)=>{
     WHERE book_id=${bookId};`;
     const book = await db.get(getBookQuery);
     response.send(book);
+});
+
+//Get User Profile API
+app.get("/profile/",authenticateToken,async (request,response)=>{
+    let {username} = request;
+    const selectUserQuery = `SELECT * FROM user WHERE username='${username}';`;
+    const userDetails = await db.get(selectUserQuery);
+    response.send(userDetails);
 });
