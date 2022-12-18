@@ -4,6 +4,7 @@ const sqlite3 = require('sqlite3');
 const path = require('path');
 const bcrypt = require('bcrypt');
 
+
 const app = express();
 app.use(express.json())
 
@@ -180,8 +181,7 @@ app.post("/users/",async (request,response)=>{
     const dbUser = await db.get(selectUserQuery);
     if (dbUser === undefined){
         const createUserQuery = `
-        INSERT INTO
-        user(username,name,password,gender,location)
+        INSERT INTO user(username,name,password,gender,location)
         VALUES
         (
             '${username}',
@@ -197,5 +197,26 @@ app.post("/users/",async (request,response)=>{
         response.send(400);
         response.send("User already exists...")
 
+    }
+})
+
+//Login User API
+app.post("/login/",async (request,response)=>{
+    const {username,password} = request.body;
+    const selectUserQuery = `SELECT * FROM user WHERE username = '${username}';`;
+    const dbUser = await db.get(selectUserQuery);
+    if (dbUser === undefined){
+        response.status(400);
+        response.send("Invalid User...");
+    }
+    else{
+        const isPasswordMatched = await bcrypt.compare(password,dbUser.password);
+        if(isPasswordMatched===true){
+            response.send("Login Success!");
+        }
+        else{
+            response.status(400);
+            response.send("Invalid Password...")
+        }
     }
 })
