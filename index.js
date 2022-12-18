@@ -2,8 +2,7 @@ const express = require('express');
 const {open} = require('sqlite');
 const sqlite3 = require('sqlite3');
 const path = require('path');
-const { request } = require('http');
-const { response } = require('express');
+const bcrypt = require('bcrypt');
 
 const app = express();
 app.use(express.json())
@@ -172,3 +171,31 @@ app.get("/filterbooks/", async (request,response)=>{
     let filteredbooksArray = await db.all(getfilteredBooksQuery);
     response.send(filteredbooksArray);
 });
+
+//Register User API
+app.post("/users/",async (request,response)=>{
+    const{username,name,password,gender,location}=request.body;
+    const hashedPassword = await bcrypt.hash(password,10);
+    const selectUserQuery = `SELECT * FROM user WHERE username = '${username}';`;
+    const dbUser = await db.get(selectUserQuery);
+    if (dbUser === undefined){
+        const createUserQuery = `
+        INSERT INTO
+        user(username,name,password,gender,location)
+        VALUES
+        (
+            '${username}',
+            '${name}',
+            '${hashedPassword}',
+            '${gender}',
+            '${location}'
+        );`;
+        await db.run(createUserQuery);
+        response.send("User created successfully");
+    }
+    else{
+        response.send(400);
+        response.send("User already exists...")
+
+    }
+})
